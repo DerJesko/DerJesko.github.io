@@ -128,6 +128,9 @@ draft: false
         {{<resume-entry what="Crypto (Advances in Cryptology)"
                         when="2023">}}
         {{</resume-entry>}}
+        {{<resume-entry what="TCC (Theory of Cryptography Conference)"
+                        when="2023">}}
+        {{</resume-entry>}}
         {{<resume-entry what="ICALP (International Colloquium on Automata, Languages and Programming)"
                         when="2023">}}
         {{</resume-entry>}}
