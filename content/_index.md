@@ -29,6 +29,10 @@ draft: false
                          where="Saarland University"
                          when="2019–2020">}}
         {{</resume-entry>}}
+        {{<resume-entry what="Internship with Giulio Malavolta"
+                         where="MPI-SP Bochum"
+                         when="June-July 2023">}}
+        {{</resume-entry>}}
         {{<resume-entry what="PhD"
                          where="CISPA Helmholtz Center for Information Security"
                          when="2020–present">}}
