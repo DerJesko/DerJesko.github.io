@@ -8,10 +8,12 @@ draft: false
             <p>
             I'm Jesko Dujmovic, a PhD student at the <a href="https://cispa.de/">CISPA</a> and <a href="https://www.uni-saarland.de">Saarland University</a> in Saarbrücken, Germany.
             Broadly, my research interests broadly lie in cryptography. More specifically, my interests are well represented by my publications. Beyond my publications, I am also interested in the following topics:
-             - Private Information Retrieval
-             - Zero-Knowledge Proof Systems
-             - Obfuscation
-             - Idealized Models
+            <ul>
+             <li>Private Information Retrieval
+             <li>Zero-Knowledge Proof Systems
+             <li>Obfuscation
+             <li>Idealized Models
+            </ul>
             </p>
             <p>
             I enjoy climbing, bouldering, hiking, and many other sports.
@@ -139,6 +141,9 @@ draft: false
         {{</resume-entry>}}
     {{</resume-section>}}
     {{<resume-section title="Reviewer At">}}
+        {{<resume-entry what="Eurocrypt"
+                        when="2024">}}
+        {{</resume-entry>}}
         {{<resume-entry what="Eurocrypt"
                         when="2023">}}
         {{</resume-entry>}}
