@@ -7,7 +7,11 @@ draft: false
         {{<resume-entry>}}
             <p>
             I'm Jesko Dujmovic, a PhD student at the <a href="https://cispa.de/">CISPA</a> and <a href="https://www.uni-saarland.de">Saarland University</a> in Saarbrücken, Germany.
-            Broadly, my research interests lie in cryptography.
+            Broadly, my research interests broadly lie in cryptography. More specifically, my interests are well represented by my publications. Beyond my publications, I am also interested in the following topics:
+             - Private Information Retrieval
+             - Zero-Knowledge Proof Systems
+             - Obfuscation
+             - Idealized Models
             </p>
             <p>
             I enjoy climbing, bouldering, hiking, and many other sports.
@@ -29,6 +33,10 @@ draft: false
         {{</resume-entry>}}
     {{</resume-section>}}
     {{<resume-section title="Publications">}}
+        {{<resume-entry what="Time-Lock Puzzles with Efficient Batch Solving"
+                        where="ePrint"
+                        when="October 2023">}}
+        {{</resume-entry>}}
         {{<resume-entry what="Rate-1 Incompressible Encryption from Standard Assumptions"
                         where="Theory of Cryptography Conference"
                         when="November 2022">}}
@@ -43,6 +51,18 @@ draft: false
         {{</resume-entry>}}
     {{</resume-section>}}
     {{<resume-section title="Talks">}}
+        {{<resume-entry what="Basics of 2PC"
+                        where="CISPA Cryptography Graduate Seminar"
+                        when="October 2023">}}
+        {{</resume-entry>}}
+        {{<resume-entry what="Time-Lock Puzzles with Efficient Batch Solving"
+                        where="CISPA Cryptography Seminar"
+                        when="October 2023">}}
+        {{</resume-entry>}}
+        {{<resume-entry what="OT Exentsions Cannot Communicate Optimally"
+                        where="MPI-SP Bochum"
+                        when="July 2023">}}
+        {{</resume-entry>}}
         {{<resume-entry what="Simple, Single-Server PIR with Sublinear Server Computation"
                         where="CISPA Cryptography Seminar"
                         when="April 2023">}}
