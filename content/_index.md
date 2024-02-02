@@ -21,9 +21,13 @@ draft: false
         {{</resume-entry>}}
     {{</resume-section>}}
     {{<resume-section title="Publications">}}
+        {{<resume-entry what="Lower-Bounds on Public-Key Operations in PIR"
+                        where="Eurocrypt"
+                        when="March 2024">}}
+        {{</resume-entry>}}
         {{<resume-entry what="Time-Lock Puzzles with Efficient Batch Solving"
-                        where="ePrint"
-                        when="October 2023">}}
+                        where="Eurocrypt"
+                        when="March 2024">}}
         {{</resume-entry>}}
         {{<resume-entry what="Rate-1 Incompressible Encryption from Standard Assumptions"
                         where="Theory of Cryptography Conference"
