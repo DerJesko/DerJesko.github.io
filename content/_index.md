@@ -7,7 +7,7 @@ draft: false
         {{<resume-entry>}}
             <p>
             I'm Jesko Dujmovic, a PhD student at the <a href="https://cispa.de/">CISPA</a> and <a href="https://www.uni-saarland.de">Saarland University</a> in Saarbrücken, Germany.
-            Broadly, my research interests broadly lie in cryptography. My specific research intests include my publications and the following topics:
+            My research interests broadly lie in cryptography. My specific research intests include my publications and the following topics:
             <ul>
              <li>Private Information Retrieval
              <li>Zero-Knowledge Proof Systems
