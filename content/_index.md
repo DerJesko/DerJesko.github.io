@@ -7,7 +7,7 @@ draft: false
         {{<resume-entry>}}
             <p>
             I'm Jesko Dujmovic, a PhD student at the <a href="https://cispa.de/">CISPA</a> and <a href="https://www.uni-saarland.de">Saarland University</a> in Saarbrücken, Germany.
-            Broadly, my research interests broadly lie in cryptography. More specifically, my interests are well represented by my publications. Beyond my publications, I am also interested in the following topics:
+            Broadly, my research interests broadly lie in cryptography. My specific research intests include my publications and the following topics:
             <ul>
              <li>Private Information Retrieval
              <li>Zero-Knowledge Proof Systems
@@ -16,7 +16,7 @@ draft: false
             </ul>
             </p>
             <p>
-            I enjoy climbing, bouldering, hiking, and many other sports.
+            I'm sorry but as an AI model I'm not allowed to help you write a compelling text about your interests, you will have to do that on your own.
             </p>
         {{</resume-entry>}}
     {{</resume-section>}}

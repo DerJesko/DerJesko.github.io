@@ -1,4 +1,7 @@
-
+---
+draft: true
+---
+{{<container>}}
     {{<resume-section title="Education" >}}
         {{<resume-entry what="Bachelor of Computer Science"
                          where="Saarland University"
@@ -17,3 +20,4 @@
                          when="2020–present">}}
         {{</resume-entry>}}
     {{</resume-section>}}
+{{</container>}}
