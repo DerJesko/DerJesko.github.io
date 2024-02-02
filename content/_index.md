@@ -34,7 +34,7 @@ draft: false
                         when="November 2022">}}
         {{</resume-entry>}}
         {{<resume-entry what="Maliciously Circuit-Private FHE from Information-Theoretic Principles"
-                        where="Information-Theoretic Cryptography 2022"
+                        where="Information-Theoretic Cryptography"
                         when="July 2022">}}
         {{</resume-entry>}}
         {{<resume-entry what="Algebraic Restriction Codes and Their Applications"
