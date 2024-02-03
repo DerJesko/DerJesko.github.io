@@ -6,11 +6,9 @@ div.content {
     div.content {
         padding: 20px 15%;
     }
-
 }
 
 body {
-    margin: 0px;
     background: linear-gradient(135deg, #ddeeee, #eeeeee);
 }
 
