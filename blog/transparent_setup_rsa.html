@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Transpanent-Setup Hidden-Order Group from Factoring (Not a Paper)</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="icon" type="image/x-icon" href="favicon.png">
+    <meta charset="utf-8">
+</head>
+
+<body>
+    <div class="content">
+        <div id="navv">
+            [<b><a href="../index.html">Homepage</a></b>]
+        </div>
+        <div>
+            <h2>Transpanent-Setup Hidden-Order Group from Factoring</h2>
+            <p>
+                There are some applications like vector commitments, like vector commitments, verifiable delay
+                functions,
+                or time-lock puzzles, where you need a hidden-order group. As far as I know there are essentially two
+                candidates: the RSA group or a class group. If you want a transparent setup for the group it seems you
+                can only use class groups. Here, I will explain how you can still use something similar to the RSA
+                group. This comes at the cost of a multiplicative overhead roughly linear in the security parameter λ.
+                So,
+                it seems like a strictly theoretical contribution.
+            </p>
+            <p>
+                The basic idea is to sample λ many big numbers N<sub>1</sub>,...,N<sub>λ</sub> uniformly at random. Each
+                of them has a constant probability of being hard to factor. As long as N<sub>i</sub> is hard to factor
+                the multiplicative group over N<sub>i</sub> has a hidden order. Therefore, the multiplicative group over
+                N<sub>1</sub>·...·N<sub>λ</sub> has a hidden order with all but negligible probability.
+            </p>
+        </div>
+    </div>
+    </div>
+
+</body>
+
+</html>

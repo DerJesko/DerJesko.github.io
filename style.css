@@ -12,11 +12,7 @@ body {
     background: linear-gradient(135deg, #ddeeee, #eeeeee);
 }
 
-#about p {
-    text-align: justify;
-}
-
-.content>div {
+div.content>div {
     margin-bottom: 30px;
 }
 
@@ -29,14 +25,4 @@ b {
 a.people {
     color: #000;
     text-decoration: none;
-}
-
-div#media {
-    float: right;
-    margin-left: 20px;
-}
-
-img#headshot {
-    max-width: 100%;
-    width: 400px;
 }

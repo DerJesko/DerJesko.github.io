@@ -1,0 +1,14 @@
+div#media {
+    float: right;
+    margin-left: 20px;
+}
+
+img#headshot {
+    max-width: 100%;
+    width: 400px;
+}
+
+
+#about p {
+    text-align: justify;
+}
