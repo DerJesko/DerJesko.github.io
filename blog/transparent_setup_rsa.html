@@ -16,20 +16,32 @@
         <div>
             <h2>Transpanent-Setup Hidden-Order Group from Factoring</h2>
             <p>
-                There are some applications like vector commitments, like vector commitments, verifiable delay
-                functions,
-                or time-lock puzzles, where you need a hidden-order group. As far as I know there are essentially two
-                candidates: the RSA group or a class group. If you want a transparent setup for the group it seems you
-                can only use class groups. Here, I will explain how you can still use something similar to the RSA
-                group. This comes at the cost of a multiplicative overhead roughly linear in the security parameter λ.
-                So,
-                it seems like a strictly theoretical contribution.
+                There are some applications like <a href="https://eprint.iacr.org/2011/495.pdf">vector commitments</a>,
+                verifiable delay functions [<a href="https://eprint.iacr.org/2018/601.pdf">BBBF</a>,<a
+                    href="https://eprint.iacr.org/2018/623.pdf">Wes</a>,<a
+                    href="https://eprint.iacr.org/2022/1021.pdf">HHKKP</a>], or
+                time-lock
+                puzzles [<a href="http://www.hashcash.org/papers/time-lock.pdf">RSW</a>,<a
+                    href="https://eprint.iacr.org/2021/1272.pdf">TCML</a>] where you need a
+                hidden-order group. As far as I know
+                there are essentially two candidates: the RSA group or a class group. If you want a transparent setup
+                for the group it seems you can only use class groups. Here, I will explain how you can still use
+                something similar to the RSA group. This comes at the cost of a multiplicative overhead roughly linear
+                in the security parameter λ. So, it seems like a strictly theoretical contribution.
             </p>
             <p>
                 The basic idea is to sample λ many big numbers N<sub>1</sub>,...,N<sub>λ</sub> uniformly at random. Each
                 of them has a constant probability of being hard to factor. As long as N<sub>i</sub> is hard to factor
                 the multiplicative group over N<sub>i</sub> has a hidden order. Therefore, the multiplicative group over
                 N<sub>1</sub>·...·N<sub>λ</sub> has a hidden order with all but negligible probability.
+            </p>
+            <h3>Random Number Hard to Factor?</h3>
+            <p>
+                As far as I can tell, a number is hard to factor if its second biggest prime factor is big. So, if I
+                sample a random 3072-bit number and it happens to have two ≥1024-bit prime factors then it seems to be
+                as hard to factor as a 2048-bit RSA modulus. As one can see in this <a
+                    href="https://math.stackexchange.com/a/375503">math stackexchange post</a>, the probability that the
+                second largest prime factor of a random 3072-bit number is &lt;1024-bit is around 15%.
             </p>
         </div>
     </div>
