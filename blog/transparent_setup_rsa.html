@@ -41,8 +41,11 @@
                 sample a random 3072-bit number and it happens to have two ≥1024-bit prime factors then it seems to be
                 as hard to factor as a 2048-bit RSA modulus. As one can see in this <a
                     href="https://math.stackexchange.com/a/375503">math stackexchange post</a>, the probability that the
-                second largest prime factor of a random 3072-bit number is &lt;1024-bit is around 15%.
+                second largest prime factor of a random 3072-bit number is &gt;1024-bit is around 15%. Therefore, to
+                have a 2<sup>-60</sup> probability that one of the N<sub>i</sub> is hard to factor, we need to sample
+                ~256 numbers.
             </p>
+            <p>I've just been informed that people already do something similar to this. I don't know where though.</p>
         </div>
     </div>
     </div>
