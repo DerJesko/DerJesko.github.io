@@ -15,7 +15,14 @@
         </div>
         <div>
             <h2>Batch Blind Signatures</h2>
-            <p>Essentially, Fischlin transform works even if one uses a compressing commitment</p>
+            <p>Blind signatures are digital signatures where the signing process is an interactive protocol between a
+                signer and a user. The signer provides the signing key sk and the user provides the message and receives
+                a signature for that message. We require certain properties of this protocol. The signer should stay the
+                only person that can sign he should not be able to associate a signing interaction with a signature.</p>
+            <p>[<a href="https://iacr.org/archive/crypto2006/41170058/41170058.pdf">Fischlin</a>] shows how to, fairly
+                generically, construct a two round blind signature scheme from a signature scheme
+                sig=(KeyGen,Sign,Verify), a commitment scheme com=(Com,Open), a public-key encryption scheme
+                enc=(KeyGen,Enc,Dec), and a NIZK nizk=(Setup,Prove,Verify).</p>
         </div>
     </div>
     </div>
