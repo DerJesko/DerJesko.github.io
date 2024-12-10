@@ -20,30 +20,88 @@
                 a signature for that message. We require certain properties of this protocol. The signer should stay the
                 only person that can sign he should not be able to associate a signing interaction with a signature.</p>
             <p>[<a href="https://iacr.org/archive/crypto2006/41170058/41170058.pdf">Fischlin</a>] shows how to, fairly
-                generically, construct a two round blind signature scheme from a signature scheme
-                sig=(KeyGen,Sign,Verify), a commitment scheme com=(Com,Open), a public-key encryption scheme
+                generically, construct a two round blind signature scheme. Basically the user commits to the message,
+                the signer signs the commitment and the user proves via online extractable NIZK that he knows a
+                commitment to the message and a signature that signs that commitment.</p>
+            <p>A bit more formally, he builds a blind signature scheme from a signature scheme
+                sig=(KeyGen,Sign,Verify), a commitment scheme com=(Com), a public-key encryption scheme
                 enc=(KeyGen,Enc,Dec), and a NIZK nizk=(Setup,Prove,Verify).</p>
             <p>Now the blind signature has the following form:
             <ul>
-                <li>Setup:</li>
+                <li>Setup(1<sup>λ</sup>):</li>
                 <ol>
-                    <li></li>
+                    <li>Let crs←nizk.Setup(1<sup>λ</sup>)</li>
+                    <li>Let (pk,sk*)←enc.KeyGen(1<sup>λ</sup>)</li>
+                    <li>Output (crs,pk)</li>
                 </ol>
-                <li>Request:</li>
+                <li>KeyGen(1<sup>λ</sup>):</li>
                 <ol>
-                    <li></li>
+                    <li>
+                        Output (vk,sk)←sig.KeyGen(1<sup>λ</sup>)
+                    </li>
                 </ol>
-                <li>Sign:</li>
+                <li>Request(m;r):</li>
                 <ol>
-                    <li></li>
+                    <li>Output c←com.Com(m;r)</li>
                 </ol>
-                <li>Finalize:</li>
+                <li>Sign(c,sk):</li>
                 <ol>
-                    <li></li>
+                    <li>Output &#963;←sig.Sign(c,sk)</li>
                 </ol>
-                <li>Verify:</li>
+                <li>Finalize(m,&#963;,r):</li>
                 <ol>
-                    <li></li>
+                    <li>Let ct←enc.Enc(pk,(&#963;,r))</li>
+                    <li>π←nizk.Prove(ct encrypts some (&#963;,r) s.t. c←com.Com(m;r) and sign.Verify(vk,c,&#963;)=1)
+                    </li>
+                    <li>Output (ct,π)</li>
+                </ol>
+                <li>Verify(ct,π):</li>
+                <ol>
+                    <li>Output nizk.Verify(π)</li>
+                </ol>
+            </ul>
+            </p>
+            <p>Notice, the public-key encryption+NIZK combination acts as an online extractable NIZK.</p>
+            <p>What <a href="../index.html#bene">>Benedikt</a>, <a href="../index.html#rachit">>Rachit</a> and I noticed
+                is that this still works if the commitment is a vector commitment.
+                This way, with roughly the same amount of interaction you can produce an entire batch of blind
+                signatures. The only thing we need to make sure is that the signer not only signs the commitment but
+                also the number of elements the commitment is allowed to contain. Else the user could generate more
+                signatures than he is allowed to.</p>
+            <p>The full scheme looks as follows (where we now use a vector commitment scheme
+                com=(Setup,Com,Open,Verify)):
+            <ul>
+                <li>Setup(1<sup>λ</sup>):</li>
+                <ol>
+                    <li>Let crs←nizk.Setup(1<sup>λ</sup>)</li>
+                    <li>Let crs'←com.Setup(1<sup>λ</sup>)</li>
+                    <li>Let (pk,sk*)←enc.KeyGen(1<sup>λ</sup>)</li>
+                    <li>Output (crs,crs',pk)</li>
+                </ol>
+                <li>KeyGen(1<sup>λ</sup>):</li>
+                <ol>
+                    <li>
+                        Output (vk,sk)←sig.KeyGen(1<sup>λ</sup>)
+                    </li>
+                </ol>
+                <li>Request(m;r):</li>
+                <ol>
+                    <li>Output c←com.Com(crs',m<sub>1</sub>,...,m<sub>n</sub>)</li>
+                </ol>
+                <li>Sign(c,B,sk), where B is the batchsize:</li>
+                <ol>
+                    <li>Output &#963;←sig.Sign(c,sk)</li>
+                </ol>
+                <li>Finalize(m,&#963;,r):</li>
+                <ol>
+                    <li>Let ct←enc.Enc(pk,(&#963;,r))</li>
+                    <li>π←nizk.Prove(ct encrypts some (&#963;,r) s.t. c←com.Com(m;r) and sign.Verify(vk,c,&#963;)=1)
+                    </li>
+                    <li>Output (ct,π)</li>
+                </ol>
+                <li>Verify(ct,π):</li>
+                <ol>
+                    <li>Output nizk.Verify(π)</li>
                 </ol>
             </ul>
             </p>
