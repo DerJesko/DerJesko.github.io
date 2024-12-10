@@ -55,14 +55,15 @@
                     </li>
                     <li>Output (ct,π)</li>
                 </ol>
-                <li>Verify(ct,π):</li>
+                <li>Verify(m,ct,π):</li>
                 <ol>
                     <li>Output nizk.Verify(π)</li>
                 </ol>
             </ul>
             </p>
             <p>Notice, the public-key encryption+NIZK combination acts as an online extractable NIZK.</p>
-            <p>What <a href="../index.html#bene">>Benedikt</a>, <a href="../index.html#rachit">>Rachit</a> and I noticed
+            <p>What <a class="people" href="../index.html#bene">Benedikt</a>, <a class="people"
+                    href="../index.html#rachit">Rachit</a> and I noticed
                 is that this still works if the commitment is a vector commitment.
                 This way, with roughly the same amount of interaction you can produce an entire batch of blind
                 signatures. The only thing we need to make sure is that the signer not only signs the commitment but
@@ -84,27 +85,30 @@
                         Output (vk,sk)←sig.KeyGen(1<sup>λ</sup>)
                     </li>
                 </ol>
-                <li>Request(m;r):</li>
+                <li>Request(m):</li>
                 <ol>
                     <li>Output c←com.Com(crs',m<sub>1</sub>,...,m<sub>n</sub>)</li>
                 </ol>
                 <li>Sign(c,B,sk), where B is the batchsize:</li>
                 <ol>
-                    <li>Output &#963;←sig.Sign(c,sk)</li>
+                    <li>Output &#963;←sig.Sign((c,B),sk)</li>
                 </ol>
-                <li>Finalize(m,&#963;,r):</li>
+                <li>Finalize(m,i,&#963;,c,B):</li>
                 <ol>
-                    <li>Let ct←enc.Enc(pk,(&#963;,r))</li>
-                    <li>π←nizk.Prove(ct encrypts some (&#963;,r) s.t. c←com.Com(m;r) and sign.Verify(vk,c,&#963;)=1)
+                    <li>Let o←com.Open(c,i,m)</li>
+                    <li>Let ct←enc.Enc(pk,(&#963;,o,i,B))</li>
+                    <li>π←nizk.Prove(ct encrypts some (&#963;,o,i,B) s.t. com.Verify(m,c,o,i)=1, i&lt;B, and
+                        sign.Verify(vk,(c,B),&#963;)=1)
                     </li>
                     <li>Output (ct,π)</li>
                 </ol>
-                <li>Verify(ct,π):</li>
+                <li>Verify(m,ct,π):</li>
                 <ol>
                     <li>Output nizk.Verify(π)</li>
                 </ol>
             </ul>
             </p>
+            <p>That is the idea, I'll clean it uz and provide a proof sketch when I feel like it &#128540;</p>
         </div>
     </div>
     </div>
