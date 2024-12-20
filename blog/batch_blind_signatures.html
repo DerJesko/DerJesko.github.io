@@ -63,7 +63,7 @@
             </p>
             <p>Notice, the public-key encryption+NIZK combination acts as an online extractable NIZK.</p>
             <p>What <a class="people" href="../people/bene.html">Benedikt</a>, <a class="people"
-                    href="../index.html#rachit">Rachit</a> and I noticed
+                    href="../people/rachit.html">Rachit</a> and I noticed
                 is that this still works if the commitment is a vector commitment.
                 This way, with roughly the same amount of interaction you can produce an entire batch of blind
                 signatures. The only thing we need to make sure is that the signer not only signs the commitment but
@@ -108,7 +108,23 @@
                 </ol>
             </ul>
             </p>
-            <p>That is the idea, I'll clean it uz and provide a proof sketch when I feel like it &#128540;</p>
+            <p>Blindness follows fairly easily from zero knowledge of nizk, semantic security of enc, and hiding of com.
+                One-more unforgability is a bit harder to prove. In fact the definition is already a bit non-trivial but
+                the strategy is roughly the following: You reduce to unforgability of the signatures by guaranteeing
+                that the cts are encrypting (&#963;,o,i,B) s.t. com.Verify(m,c,o,i)=1, i&lt;B, and
+                sign.Verify(vk,(c,B),&#963;)=1. This follows from the soundness of nizk. Then you decrypt all the cts.
+                By the precondition of one-more unforgability of the blind signature scheme or there is now either a
+                commitment that contains more values than B (which we can rule out via binding) or there are more
+                commitments than the signer actually signed. This would break unforgability of sig.
+            </p>
+            <p>The proof is pretty much the same as in [<a
+                    href="https://iacr.org/archive/crypto2006/41170058/41170058.pdf">Fischlin</a>] but you need to be a
+                little bit more careful when you count the number of signatures.</p>
+            <p>Overall, we thought this is a cute observation but not really publication worthy. We tried to make it
+                practical by instatiating the components with schemes that work particularly well together but we
+                couldn't find any signatures that sign vector commitments with the entire process being efficiently
+                provable with a special purpose NIZK. If you have any idea where to take this feel free to email me
+                about this.</p>
         </div>
     </div>
     </div>
