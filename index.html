@@ -11,6 +11,10 @@
 </head>
 
 <body>
+    <script>
+        people = fetch('people.json').then(response => response.json());
+        console.log(people);
+    </script>
     <div class="content">
         <div id="navv">
             [<b><a href="#publications">Publications</a></b>] [<b><a href="#talks">Talks</a></b>] [<b><a
