@@ -10,11 +10,9 @@
     <meta name="google-site-verification" content="be76dj_mqKSSWm4G_RnIrAXeWg5tNeZLGTEaPwlEiQI" />
 </head>
 
+<script src="people.js"></script>
+
 <body>
-    <script>
-        people = fetch('people.json').then(response => response.json());
-        console.log(people);
-    </script>
     <div class="content">
         <div id="navv">
             [<b><a href="#publications">Publications</a></b>] [<b><a href="#talks">Talks</a></b>] [<b><a
@@ -37,10 +35,10 @@
                 type and does not break any forms.
             </p>
             <p>
-                I currently have a shared postdoc with <a href="people/daniel.html">Daniel Wichs</a> and <a
-                    href="people/ran.html">Ran Canetti</a> at Northeastern University and Boston University.
-                Before this I was a PhD student with <a class="people" href="people/nico.html">Nico Döttling</a> at
-                CISPA. In the summer of 2023 I interned with <a class="people" href="people/giulio.html">Giulio
+                I currently have a shared postdoc with <a class="people daniel">Daniel Wichs</a> and <a
+                    class="people ran">Ran Canetti</a> at Northeastern University and Boston University.
+                Before this I was a PhD student with <a class="people nico">Nico Döttling</a> at
+                CISPA. In the summer of 2023 I interned with <a class="people giulio">Giulio
                     Malavolta</a> at MPI-SP. Before this I did my MSc and BSc at Saarland University. I'm generally
                 interested cryptography, preferably theoretical cryptography, but I also love
                 to see protocols deployed in real life. More specifically, I love working on Private Information
@@ -62,50 +60,47 @@
             Here is a list of my publications
             <ul>
                 <li><b><a href="https://eprint.iacr.org/2025/1723">Space-Deniable Proofs</a></b><br />
-                    <u>Jesko Dujmovic</u>, <a class="people" href="people/christoph.html">Christoph U. Günther</a>, <a
-                        class="people" href="people/k.html">Krzysztof Pietrzak</a><br />
+                    <u>Jesko Dujmovic</u>, <a class="people christoph">Christoph U. Günther</a>, <a
+                        class="people k">Krzysztof Pietrzak</a><br />
                     <i>TCC 2025</i>
                 </li>
                 <li><b><a href="https://eprint.iacr.org/2025/517">Designated-Verifier SNARGs with One Group
                             Element</a></b><br />
-                    <a class="people" href="people/gal.html">Gal Arnon</a>, <u>Jesko Dujmovic</u>, <a class="people"
-                        href="people/yuval.html">Yuval Ishai</a><br />
+                    <a class="people gal">Gal Arnon</a>, <u>Jesko Dujmovic</u>, <a class="people yuval">Yuval Ishai</a><br />
                     <i>Crypto 2025</i>
                 </li>
                 <li><b><a href="https://eprint.iacr.org/2025/317">Minicrypt PIR for Big Batches</a></b><br />
-                    <a class="people" href="people/nico.html">Nico Döttling</a>, <u>Jesko Dujmovic</u>, <a
-                        class="people" href="people/julian.html">Julian Loss</a>, <a class="people"
-                        href="people/maci.html">Maciej Obremski</a><br />
+                    <a class="people nico">Nico Döttling</a>, <u>Jesko Dujmovic</u>, <a
+                        class="people julian">Julian Loss</a>, <a class="people maci">Maciej Obremski</a><br />
                     <i>eprint</i>
                 </li>
                 <li><b><a href="https://eprint.iacr.org/2025/502">Registration-Based Encryption in the Plain
                             Model</a></b><br />
-                    <u>Jesko Dujmovic</u>, <a class="people" href="people/giulio.html">Giulio Malavolta</a>, <a
-                        class="people" href="people/wei.html">Wei Qi</a><br />
+                    <u>Jesko Dujmovic</u>, <a class="people giulio">Giulio Malavolta</a>, <a
+                        class="people wei">Wei Qi</a><br />
                     <i>PKC 2025</i>
                 </li>
                 <li><b><a href="https://eprint.iacr.org/2025/141">Space-Lock Puzzles and Verifiable Space-Hard Functions
                             from Root-Finding in Sparse
                             Polynomials</a></b><br />
-                    <a class="people" href="people/nico.html">Nico Döttling</a>, <u>Jesko Dujmovic</u>, <a
-                        class="people" href="people/antoine.html">Antoine Joux</a><br />
+                    <a class="people nico">Nico Döttling</a>, <u>Jesko Dujmovic</u>, <a
+                        class="people antoine">Antoine Joux</a><br />
                     <i>TCC 2024</i>
                 </li>
                 <li><b><a href="https://eprint.iacr.org/2024/694">Lower-Bounds on Public-Key Operations in
                             PIR</a></b><br />
-                    <u>Jesko Dujmovic</u>, <a class="people" href="people/haji.html">Mohammad Hajiabadi</a><br />
+                    <u>Jesko Dujmovic</u>, <a class="people haji">Mohammad Hajiabadi</a><br />
                     <i>Eurocrypt 2024</i>
                 </li>
                 <li><b><a href="https://eprint.iacr.org/2023/1582">Time-Lock Puzzles with Efficient Batch
                             Solving</a></b><br />
-                    <u>Jesko Dujmovic</u>, <a class="people" href="people/rachit.html">Rachit Garg</a>, <a
-                        class="people" href="people/giulio.html">Giulio Malavolta</a><br />
+                    <u>Jesko Dujmovic</u>, <a class="people rachit">Rachit Garg</a>, <a
+                        class="people giulio">Giulio Malavolta</a><br />
                     <i>Eurocrypt 2024</i>
                 </li>
                 <li><b><a href="https://eprint.iacr.org/2022/697">Rate-1 Incompressible Encryption from Standard
                             Assumptions</a></b><br />
-                    <a class="people" href="people/pedro.html">Perdo Branco</a>, <a class="people"
-                        href="people/nico.html">Nico
+                    <a class="people pedro">Perdo Branco</a>, <a class="people nico">Nico
                         Döttling</a>,
                     <u>Jesko
                         Dujmovic</u><br />
@@ -114,17 +109,16 @@
                 <li><b><a href="https://eprint.iacr.org/2022/495">Maliciously Circuit-Private FHE from
                             Information-Theoretic
                             Principles</a></b><br />
-                    <a class="people" href="people/nico.html">Nico Döttling</a>, <u>Jesko Dujmovic</u><br />
+                    <a class="people nico">Nico Döttling</a>, <u>Jesko Dujmovic</u><br />
                     <i>ITC 2022</i>
                 </li>
                 <li><b><a href="https://eprint.iacr.org/2021/1177">Algebraic Restriction Codes and Their
                             Applications</a></b><br />
-                    <a class="people" href="people/divesh.html">Divesh Aggarwal</a>, <a class="people"
-                        href="people/nico.html">Nico
+                    <a class="people divesh">Divesh Aggarwal</a>, <a class="people nico">Nico
                         Döttling</a>,
-                    <u>Jesko Dujmovic</u>, <a class="people" href="people/haji.html">Mohammad
-                        Hajiabadi</a>, <a class="people" href="people/giulio.html">Giulio Malavolta</a>, <a
-                        class="people" href="people/maci.html">Maciej Obremski</a><br />
+                    <u>Jesko Dujmovic</u>, <a class="people haji">Mohammad
+                        Hajiabadi</a>, <a class="people giulio">Giulio Malavolta</a>, <a
+                        class="people maci">Maciej Obremski</a><br />
                     <i>ITCS 2022</i> and <i>Algorithmica 2023</i>
                 </li>
             </ul>
@@ -278,23 +272,23 @@
             <h2 id="people">People</h2>
             Here is a list of people I've worked with.
             <ul>
-                <li id="divesh"><a href="people/divesh.html">Divesh Aggarwal</a></li>
-                <li id="gal"><a href="people/gal.html">Gal Arnon</a></li>
-                <li id="pedro"><a href="people/pedro.html">Pedro Branco</a></li>
-                <li id="ran"><a href="people/ran.html">Ran Canetti</a></li>
-                <li id="nico"><a href="people/nico.html">Nico Döttling</a></li>
-                <li id="rachit"><a href="people/rachit.html">Rachit Garg</a></li>
-                <li id="christoph"><a href="people/christoph.html">Christoph Günther</a></li>
-                <li id="haji"><a href="people/haji.html">Mohammad Hajiabadi</a></li>
-                <li id="yuval"><a href="people/yuval.html">Yuval Ishai</a></li>
-                <li id="antoine"><a href="people/antoine.html">Antoine Joux</a></li>
-                <li id="julian"><a href="people/julian.html">Julian Loss</a></li>
-                <li id="giulio"><a href="people/giulio.html">Giulio Malavolta</a></li>
-                <li id="maci"><a href="people/maci.html">Maciej Obremski</a></li>
-                <li id="k"><a href="people/k.html">Krzysztof Pietrzak</a></li>
-                <li id="wei"><a href="people/wei.html">Wei Qi</a></li>
-                <li id="bene"><a href="people/bene.html">Benedikt Wagner</a></li>
-                <li id="daniel"><a href="people/daniel.html">Daniel Wichs</a></li>
+                <li id="divesh"><a class="divesh">Divesh Aggarwal</a></li>
+                <li id="gal"><a class="gal">Gal Arnon</a></li>
+                <li id="pedro"><a class="pedro">Pedro Branco</a></li>
+                <li id="ran"><a class="ran">Ran Canetti</a></li>
+                <li id="nico"><a class="nico">Nico Döttling</a></li>
+                <li id="rachit"><a class="rachit">Rachit Garg</a></li>
+                <li id="christoph"><a class="christoph">Christoph Günther</a></li>
+                <li id="haji"><a class="haji">Mohammad Hajiabadi</a></li>
+                <li id="yuval"><a class="yuval">Yuval Ishai</a></li>
+                <li id="antoine"><a class="antoine">Antoine Joux</a></li>
+                <li id="julian"><a class="julian">Julian Loss</a></li>
+                <li id="giulio"><a class="giulio">Giulio Malavolta</a></li>
+                <li id="maci"><a class="maci">Maciej Obremski</a></li>
+                <li id="k"><a class="k">Krzysztof Pietrzak</a></li>
+                <li id="wei"><a class="wei">Wei Qi</a></li>
+                <li id="bene"><a class="bene">Benedikt Wagner</a></li>
+                <li id="daniel"><a class="daniel">Daniel Wichs</a></li>
             </ul>
             <a href="#name">Back to Top</a>
         </div>
@@ -316,5 +310,7 @@
     </div>
 
 </body>
+
+<script src="add_links_to_people.js"></script>
 
 </html>
