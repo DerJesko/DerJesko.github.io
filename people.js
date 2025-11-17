@@ -1,5 +1,9 @@
 var people =
 {
+    "angelos": {
+        "name": "Angelos Pelecanos",
+        "website": "https://apelecan.github.io/"
+    },
     "antoine": {
         "name": "Antoine Joux",
         "website": "https://cispa.de/en/people/c01anjo"
@@ -19,6 +23,10 @@ var people =
     "divesh": {
         "name": "Divesh Aggarwal",
         "website": "https://sites.google.com/site/diveshhomepage/"
+    },
+    "eylon": {
+        "name": "Eylon Yogev",
+        "website": "https://eylonyogev.com/"
     },
     "gal": {
         "name": "Gal Arnon",
@@ -59,6 +67,10 @@ var people =
     "ran": {
         "name": "Ran Canetti",
         "website": "https://www.bu.edu/cs/profiles/ran-canetti/"
+    },
+    "stefano": {
+        "name": "Stefano Tessaro",
+        "website": "https://homes.cs.washington.edu/~tessaro/"
     },
     "wei": {
         "name": "Wei Qi",
