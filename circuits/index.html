@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<!--- Coded by Gemini -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boolean Circuit Explorer</title>
+    <style>
+        :root {
+            --bg-color: #1e1e2e;
+            --panel-bg: #2a2a3f;
+            --text-color: #cdd6f4;
+            --accent: #89b4fa;
+            --wire-off: #585b70;
+            --wire-on: #a6e3a1;
+            --gate-bg: #313244;
+            --gate-border: #45475a;
+            --highlight-dep: #f9e2af;
+            --highlight-inf: #f38ba8;
+            --highlight-both: #fab387;
+            --selected: #cba6f7;
+            --dark-text: #11111b;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow: hidden;
+        }
+
+        #sidebar {
+            width: 320px;
+            min-width: 200px;
+            background-color: var(--panel-bg);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 10;
+            overflow-y: auto;
+            flex-shrink: 0;
+            box-sizing: border-box;
+        }
+
+        #resizer {
+            width: 6px;
+            background-color: var(--gate-border);
+            cursor: col-resize;
+            z-index: 11;
+            transition: background-color 0.2s;
+            flex-shrink: 0;
+        }
+
+        #resizer:hover, #resizer.resizing {
+            background-color: var(--accent);
+        }
+
+        h2 { margin-top: 0; font-size: 1.2rem; }
+        
+        button {
+            background-color: var(--gate-bg);
+            color: var(--text-color);
+            border: 1px solid var(--gate-border);
+            padding: 8px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: 0.2s;
+        }
+
+        button:hover { background-color: var(--accent); color: var(--bg-color); }
+
+        textarea {
+            width: 100%;
+            flex-grow: 1; /* Automatically fills available vertical space */
+            min-height: 100px; /* Prevents it from crushing too small on tiny screens */
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            border: 1px solid var(--gate-border);
+            padding: 10px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            resize: none; /* Disabled manual resize since it auto-fills */
+            box-sizing: border-box;
+            white-space: pre;
+            overflow-wrap: normal;
+            overflow-x: auto;
+        }
+
+        #canvas-container {
+            flex-grow: 1;
+            position: relative;
+            min-width: 0;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .info {
+            font-size: 0.85rem;
+            color: #a6adc8;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="sidebar">
+        <h2>Circuit Editor</h2>
+        
+        <div class="controls-grid">
+            <button onclick="addGate('INPUT')">+ Input</button>
+            <button onclick="addGate('OUTPUT')">+ Output</button>
+            <button onclick="addGate('AND')">+ AND Gate</button>
+            <button onclick="addGate('XOR')">+ XOR Gate</button>
+            <button onclick="addGate('NOT')">+ NOT Gate</button>
+            <button onclick="deleteSelected()" style="color: #f38ba8;">Delete (Del)</button>
+        </div>
+
+        <div class="controls-grid">
+            <button onclick="normalizeCircuit()">Normalize Layout</button>
+            <button onclick="pruneCircuit()">Prune Circuit</button>
+        </div>
+        
+        <div class="controls-grid">
+            <button onclick="exportCircuit()">Export JSON</button>
+            <button onclick="triggerImport()">Import JSON</button>
+            <input type="file" id="import-file" accept=".json" style="display: none;" onchange="handleImport(event)">
+        </div>
+
+        <hr style="border-color: var(--gate-border); width: 100%;">
+
+        <h2>Circuit Generator</h2>
+        <div class="info">
+            Commands: <code>create(type)</code> returns id.<br>
+            <code>connect(fromId, toId)</code>.<br>
+            Available types: INPUT, OUTPUT, AND, XOR, NOT.
+        </div>
+        <textarea id="dsl-code">
+// Random Circuit Generator
+const numInputs = Math.floor(Math.random() * 4) + 2; 
+const numGates = Math.floor(Math.random() * 12) + 5; 
+const numOutputs = Math.floor(Math.random() * 3) + 1; 
+
+const inputs = [];
+for(let i=0; i<numInputs; i++) inputs.push(create('INPUT'));
+
+const types = ['AND', 'XOR', 'NOT'];
+const nodes = [...inputs];
+
+// Generate random gates and connect them
+for(let i=0; i<numGates; i++) {
+    const type = types[Math.floor(Math.random() * types.length)];
+    const gate = create(type);
+    
+    const connections = type === 'NOT' ? 1 : 2;
+    for(let c=0; c<connections; c++) {
+        const source = nodes[Math.floor(Math.random() * nodes.length)];
+        connect(source, gate);
+    }
+    nodes.push(gate);
+}
+
+// Generate outputs and connect them
+for(let i=0; i<numOutputs; i++) {
+    const out = create('OUTPUT');
+    const sourcePool = nodes.length > inputs.length ? nodes.slice(inputs.length) : nodes;
+    const source = sourcePool[Math.floor(Math.random() * sourcePool.length)];
+    connect(source, out);
+}
+        </textarea>
+        <button onclick="runDSL()">Run Generator</button>
+        
+        <div class="info">
+            • Double-click INPUTs to toggle.<br>
+            • Drag from port circles to wire.<br>
+            • Click wires or gates to select.<br>
+            • Shift+Click for multi-select.<br>
+            • Selection shows influences (pink), dependencies (yellow), and both (orange).
+        </div>
+    </div>
+
+    <div id="resizer"></div>
+
+    <div id="canvas-container">
+        <canvas id="circuitCanvas"></canvas>
+    </div>
+
+<script>
+    // --- UI Resizer Logic ---
+    const resizer = document.getElementById('resizer');
+    const sidebar = document.getElementById('sidebar');
+    let isResizingSidebar = false;
+
+    resizer.addEventListener('mousedown', (e) => {
+        isResizingSidebar = true;
+        document.body.style.cursor = 'col-resize';
+        resizer.classList.add('resizing');
+        document.body.style.userSelect = 'none';
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (!isResizingSidebar) return;
+        const newWidth = Math.max(200, Math.min(e.clientX, window.innerWidth - 100));
+        sidebar.style.width = newWidth + 'px';
+        resize();
+    });
+
+    document.addEventListener('mouseup', () => {
+        if (isResizingSidebar) {
+            isResizingSidebar = false;
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+            resizer.classList.remove('resizing');
+        }
+    });
+
+    // --- Canvas & Circuit Logic ---
+    const canvas = document.getElementById('circuitCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    function resize() {
+        canvas.width = canvas.parentElement.clientWidth;
+        canvas.height = canvas.parentElement.clientHeight;
+        draw();
+    }
+    window.addEventListener('resize', resize);
+
+    let nextId = 1;
+    let nodes = []; 
+    let selection = [];
+    let selectedWires = []; 
+    
+    const GATE_WIDTH = 60;
+    const GATE_HEIGHT = 40;
+    const PORT_RADIUS = 5;
+
+    let isDragging = false;
+    let dragOffsetX = 0, dragOffsetY = 0;
+    let isWiring = false;
+    let wireStartNode = null;
+    let mouseX = 0, mouseY = 0;
+
+    resize();
+
+    // --- Core Logic ---
+
+    function evaluate() {
+        nodes.forEach(n => { if (n.type !== 'INPUT') n.value = false; n.visited = false; });
+        
+        function evalNode(node) {
+            if (node.visited) return node.value;
+            node.visited = true;
+            
+            if (node.type === 'INPUT') return node.value;
+
+            const inValues = node.inputs.map(id => {
+                const n = nodes.find(x => x.id === id);
+                return n ? evalNode(n) : false;
+            });
+
+            if (node.type === 'AND') node.value = inValues.length > 0 && inValues.every(v => v);
+            else if (node.type === 'XOR') node.value = inValues.reduce((a, b) => a !== b, false);
+            else if (node.type === 'NOT') node.value = inValues.length > 0 ? !inValues[0] : false;
+            else if (node.type === 'OUTPUT') node.value = inValues.length > 0 ? inValues[0] : false;
+            
+            return node.value;
+        }
+
+        nodes.filter(n => n.type === 'OUTPUT').forEach(evalNode);
+        draw();
+    }
+
+    // --- Rendering ---
+
+    function getDependencies(nodeId) {
+        let deps = new Set();
+        function traceBack(id) {
+            const n = nodes.find(x => x.id === id);
+            if (!n || deps.has(id)) return;
+            deps.add(id);
+            n.inputs.forEach(traceBack);
+        }
+        traceBack(nodeId);
+        deps.delete(nodeId);
+        return deps;
+    }
+
+    function getInfluences(nodeId) {
+        let infs = new Set();
+        function traceForward(id) {
+            if (infs.has(id)) return;
+            infs.add(id);
+            nodes.filter(n => n.inputs.includes(id)).forEach(n => traceForward(n.id));
+        }
+        traceForward(nodeId);
+        infs.delete(nodeId);
+        return infs;
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        let activeDeps = new Set();
+        let activeInfs = new Set();
+        
+        if (selection.length > 0 || selectedWires.length > 0) {
+            selection.forEach(selNode => {
+                const nodeDeps = getDependencies(selNode.id);
+                const nodeInfs = getInfluences(selNode.id);
+                
+                nodeDeps.forEach(depId => activeDeps.add(depId));
+                nodeInfs.forEach(infId => activeInfs.add(infId));
+            });
+
+            selectedWires.forEach(wire => {
+                activeDeps.add(wire.sourceId);
+                getDependencies(wire.sourceId).forEach(id => activeDeps.add(id));
+                
+                activeInfs.add(wire.targetId);
+                getInfluences(wire.targetId).forEach(id => activeInfs.add(id));
+            });
+        }
+
+        // Draw Wires
+        nodes.forEach(target => {
+            target.inputs.forEach(sourceId => {
+                const source = nodes.find(n => n.id === sourceId);
+                if (!source) return;
+
+                const isSelected = selectedWires.some(w => w.sourceId === sourceId && w.targetId === target.id);
+
+                const path = new Path2D();
+                path.moveTo(source.x + GATE_WIDTH, source.y + GATE_HEIGHT/2);
+                
+                const cp1X = source.x + GATE_WIDTH + 40;
+                const cp1Y = source.y + GATE_HEIGHT/2;
+                const cp2X = target.x - 40;
+                const cp2Y = target.y + GATE_HEIGHT/2;
+                
+                path.bezierCurveTo(cp1X, cp1Y, cp2X, cp2Y, target.x, target.y + GATE_HEIGHT/2);
+                
+                ctx.lineWidth = isSelected ? 5 : 3;
+                if (isSelected) {
+                    ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--selected').trim();
+                } else {
+                    ctx.strokeStyle = source.value ? getComputedStyle(document.body).getPropertyValue('--wire-on').trim() : getComputedStyle(document.body).getPropertyValue('--wire-off').trim();
+                }
+                
+                ctx.stroke(path);
+            });
+        });
+
+        // Draw Temporary Wire
+        if (isWiring && wireStartNode) {
+            ctx.beginPath();
+            ctx.moveTo(wireStartNode.x + GATE_WIDTH, wireStartNode.y + GATE_HEIGHT/2);
+            ctx.lineTo(mouseX, mouseY);
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#a6adc8';
+            ctx.stroke();
+        }
+
+        // Draw Nodes
+        nodes.forEach(node => {
+            let isHighlighted = false;
+
+            if (selection.includes(node)) {
+                ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--selected').trim();
+                isHighlighted = true;
+            } else if (activeDeps.has(node.id) && activeInfs.has(node.id)) {
+                ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--highlight-both').trim();
+                isHighlighted = true;
+            } else if (activeDeps.has(node.id)) {
+                ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--highlight-dep').trim();
+                isHighlighted = true;
+            } else if (activeInfs.has(node.id)) {
+                ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--highlight-inf').trim();
+                isHighlighted = true;
+            } else {
+                ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--gate-bg').trim();
+            }
+            
+            ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--gate-border').trim();
+            ctx.lineWidth = 2;
+            
+            ctx.fillRect(node.x, node.y, GATE_WIDTH, GATE_HEIGHT);
+            ctx.strokeRect(node.x, node.y, GATE_WIDTH, GATE_HEIGHT);
+
+            // Ports
+            ctx.fillStyle = '#a6adc8';
+            if (node.type !== 'INPUT') { 
+                ctx.beginPath();
+                ctx.arc(node.x, node.y + GATE_HEIGHT/2, PORT_RADIUS, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            if (node.type !== 'OUTPUT') { 
+                ctx.beginPath();
+                ctx.arc(node.x + GATE_WIDTH, node.y + GATE_HEIGHT/2, PORT_RADIUS, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Text
+            ctx.fillStyle = isHighlighted ? getComputedStyle(document.body).getPropertyValue('--dark-text').trim() : getComputedStyle(document.body).getPropertyValue('--text-color').trim();
+            ctx.font = '14px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            let label = node.type;
+            if (node.type === 'INPUT') label = node.value ? '1' : '0';
+            if (node.type === 'OUTPUT') label = 'OUT:' + (node.value ? '1' : '0');
+            ctx.fillText(label, node.x + GATE_WIDTH/2, node.y + GATE_HEIGHT/2);
+        });
+    }
+
+    // --- Interaction ---
+
+    function getNodeAt(x, y) {
+        for (let i = nodes.length - 1; i >= 0; i--) {
+            const n = nodes[i];
+            if (x >= n.x && x <= n.x + GATE_WIDTH && y >= n.y && y <= n.y + GATE_HEIGHT) {
+                return { node: n, part: 'body' };
+            }
+            if (n.type !== 'OUTPUT') {
+                const px = n.x + GATE_WIDTH, py = n.y + GATE_HEIGHT/2;
+                if (Math.hypot(x - px, y - py) < PORT_RADIUS + 5) return { node: n, part: 'out_port' };
+            }
+            if (n.type !== 'INPUT') {
+                const px = n.x, py = n.y + GATE_HEIGHT/2;
+                if (Math.hypot(x - px, y - py) < PORT_RADIUS + 5) return { node: n, part: 'in_port' };
+            }
+        }
+        return null;
+    }
+
+    canvas.addEventListener('mousedown', (e) => {
+        if (isResizingSidebar) return;
+        
+        const rect = canvas.getBoundingClientRect();
+        mouseX = e.clientX - rect.left;
+        mouseY = e.clientY - rect.top;
+
+        const target = getNodeAt(mouseX, mouseY);
+
+        if (target) {
+            if (target.part === 'out_port') {
+                isWiring = true;
+                wireStartNode = target.node;
+            } else {
+                if (e.shiftKey) {
+                    if (selection.includes(target.node)) selection = selection.filter(n => n !== target.node);
+                    else selection.push(target.node);
+                } else {
+                    if (!selection.includes(target.node)) {
+                        selection = [target.node];
+                        selectedWires = [];
+                    }
+                }
+                
+                isDragging = true;
+                selection.forEach(selNode => {
+                    nodes.push(nodes.splice(nodes.indexOf(selNode), 1)[0]);
+                });
+                
+                dragOffsetX = mouseX - target.node.x;
+                dragOffsetY = mouseY - target.node.y;
+            }
+        } else {
+            let clickedWire = null;
+            ctx.lineWidth = 15; 
+            
+            for (let targetNode of nodes) {
+                for (let sourceId of targetNode.inputs) {
+                    const sourceNode = nodes.find(n => n.id === sourceId);
+                    if (!sourceNode) continue;
+                    
+                    const path = new Path2D();
+                    path.moveTo(sourceNode.x + GATE_WIDTH, sourceNode.y + GATE_HEIGHT/2);
+                    const cp1X = sourceNode.x + GATE_WIDTH + 40;
+                    const cp1Y = sourceNode.y + GATE_HEIGHT/2;
+                    const cp2X = targetNode.x - 40;
+                    const cp2Y = targetNode.y + GATE_HEIGHT/2;
+                    path.bezierCurveTo(cp1X, cp1Y, cp2X, cp2Y, targetNode.x, targetNode.y + GATE_HEIGHT/2);
+                    
+                    if (ctx.isPointInStroke(path, mouseX, mouseY)) {
+                        clickedWire = { sourceId: sourceId, targetId: targetNode.id };
+                        break;
+                    }
+                }
+                if (clickedWire) break;
+            }
+
+            if (clickedWire) {
+                if (e.shiftKey) {
+                    const idx = selectedWires.findIndex(w => w.sourceId === clickedWire.sourceId && w.targetId === clickedWire.targetId);
+                    if (idx > -1) selectedWires.splice(idx, 1);
+                    else selectedWires.push(clickedWire);
+                } else {
+                    selection = [];
+                    selectedWires = [clickedWire];
+                }
+            } else {
+                if (!e.shiftKey) {
+                    selection = [];
+                    selectedWires = [];
+                }
+            }
+        }
+        draw();
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+        if (isResizingSidebar) return;
+        const rect = canvas.getBoundingClientRect();
+        mouseX = e.clientX - rect.left;
+        mouseY = e.clientY - rect.top;
+
+        if (isDragging && selection.length > 0) {
+            const primaryNode = selection[selection.length - 1];
+            const dx = mouseX - dragOffsetX - primaryNode.x;
+            const dy = mouseY - dragOffsetY - primaryNode.y;
+
+            selection.forEach(node => {
+                node.x += dx;
+                node.y += dy;
+            });
+            draw();
+        } else if (isWiring) {
+            draw();
+        }
+    });
+
+    canvas.addEventListener('mouseup', (e) => {
+        if (isWiring) {
+            const target = getNodeAt(mouseX, mouseY);
+            if (target && target.node !== wireStartNode && target.node.type !== 'INPUT') {
+                const infs = getInfluences(target.node.id);
+                if (!infs.has(wireStartNode.id)) {
+                    if (target.node.type === 'NOT' || target.node.type === 'OUTPUT') {
+                        target.node.inputs = [wireStartNode.id];
+                    } else if (target.node.type === 'AND' || target.node.type === 'XOR') {
+                        if (target.node.inputs.length < 2 && !target.node.inputs.includes(wireStartNode.id)) {
+                            target.node.inputs.push(wireStartNode.id);
+                        }
+                    }
+                    evaluate();
+                }
+            }
+        }
+        isDragging = false;
+        isWiring = false;
+        wireStartNode = null;
+        draw();
+    });
+
+    canvas.addEventListener('dblclick', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const target = getNodeAt(e.clientX - rect.left, e.clientY - rect.top);
+        if (target && target.node.type === 'INPUT') {
+            target.node.value = !target.node.value;
+            evaluate();
+        }
+    });
+
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'Delete' || e.key === 'Backspace') {
+            if (document.activeElement.tagName !== 'TEXTAREA') {
+                deleteSelected();
+            }
+        }
+    });
+
+    // --- Actions ---
+
+    function addGate(type) {
+        nodes.push({
+            id: nextId++,
+            type: type,
+            x: canvas.width / 2 - GATE_WIDTH / 2,
+            y: canvas.height / 2 - GATE_HEIGHT / 2,
+            value: false,
+            inputs: []
+        });
+        evaluate();
+    }
+
+    function deleteSelected() {
+        selectedWires.forEach(wire => {
+            const targetNode = nodes.find(n => n.id === wire.targetId);
+            if (targetNode) {
+                targetNode.inputs = targetNode.inputs.filter(id => id !== wire.sourceId);
+            }
+        });
+        selectedWires = [];
+
+        const ids = selection.map(n => n.id);
+        nodes = nodes.filter(n => !ids.includes(n.id));
+        nodes.forEach(n => {
+            n.inputs = n.inputs.filter(inId => !ids.includes(inId));
+        });
+        selection = [];
+        
+        evaluate();
+    }
+
+    function pruneCircuit() {
+        let changed = true;
+        while (changed) {
+            changed = false;
+            let toRemove = new Set();
+            let bypassMap = new Map();
+
+            // 1. Find gates with invalid input counts
+            nodes.forEach(n => {
+                if (n.type === 'NOT' && n.inputs.length !== 1) {
+                    toRemove.add(n.id);
+                }
+                if ((n.type === 'AND' || n.type === 'XOR') && n.inputs.length !== 2) {
+                    toRemove.add(n.id);
+                    if (n.inputs.length === 1) {
+                        bypassMap.set(n.id, n.inputs[0]);
+                    }
+                }
+            });
+
+            // 2. Find gates that don't ultimately lead to an output
+            let reachable = new Set();
+            let queue = nodes.filter(n => n.type === 'OUTPUT').map(n => n.id);
+            
+            while (queue.length > 0) {
+                let currId = queue.shift();
+                if (!reachable.has(currId)) {
+                    reachable.add(currId);
+                    let node = nodes.find(n => n.id === currId);
+                    if (node && node.inputs) {
+                        node.inputs.forEach(id => queue.push(id));
+                    }
+                }
+            }
+
+            nodes.forEach(n => {
+                if (['AND', 'XOR', 'NOT'].includes(n.type) && !reachable.has(n.id)) {
+                    toRemove.add(n.id);
+                }
+            });
+
+            // 3. Remove and safely re-wire bypasses
+            if (toRemove.size > 0) {
+                changed = true;
+                
+                nodes.forEach(target => {
+                    let newInputs = [];
+                    target.inputs.forEach(inId => {
+                        let curr = inId;
+                        let visited = new Set();
+                        
+                        while (bypassMap.has(curr) && !visited.has(curr)) {
+                            visited.add(curr);
+                            curr = bypassMap.get(curr);
+                        }
+                        
+                        if (!toRemove.has(curr) && curr !== target.id) {
+                            newInputs.push(curr);
+                        }
+                    });
+                    
+                    target.inputs = [...new Set(newInputs)];
+                });
+
+                nodes = nodes.filter(n => !toRemove.has(n.id));
+                
+                selection = selection.filter(n => !toRemove.has(n.id));
+                selectedWires = selectedWires.filter(w => !toRemove.has(w.sourceId) && !toRemove.has(w.targetId));
+            }
+        }
+        evaluate();
+    }
+
+    function normalizeCircuit() {
+        let removedIds = new Set();
+        nodes.filter(n => n.type === 'NOT').forEach(n1 => {
+            if (removedIds.has(n1.id)) return;
+            const infs = nodes.filter(n => n.inputs.includes(n1.id));
+            if (infs.length === 1 && infs[0].type === 'NOT') {
+                const n2 = infs[0];
+                const n1Input = n1.inputs[0];
+                const n2Infs = nodes.filter(n => n.inputs.includes(n2.id));
+                
+                n2Infs.forEach(target => {
+                    target.inputs = target.inputs.map(i => i === n2.id ? n1Input : i);
+                });
+                
+                removedIds.add(n1.id);
+                removedIds.add(n2.id);
+            }
+        });
+        
+        nodes = nodes.filter(n => !removedIds.has(n.id));
+        selectedWires = []; 
+        selection = [];
+
+        let levels = new Map();
+        
+        function getLevel(node) {
+            if (levels.has(node.id)) return levels.get(node.id);
+            if (node.type === 'INPUT' || node.inputs.length === 0) {
+                levels.set(node.id, 0);
+                return 0;
+            }
+            levels.set(node.id, 0); 
+            let maxInputLevel = -1;
+            node.inputs.forEach(inId => {
+                const inNode = nodes.find(n => n.id === inId);
+                if (inNode) {
+                    maxInputLevel = Math.max(maxInputLevel, getLevel(inNode));
+                }
+            });
+            const finalLevel = maxInputLevel + 1;
+            levels.set(node.id, finalLevel);
+            return finalLevel;
+        }
+
+        nodes.forEach(n => getLevel(n));
+
+        let levelGroups = [];
+        levels.forEach((lvl, id) => {
+            if (!levelGroups[lvl]) levelGroups[lvl] = [];
+            levelGroups[lvl].push(nodes.find(n => n.id === id));
+        });
+
+        const spacingX = 150;
+        const spacingY = 80;
+        const startX = 50;
+
+        levelGroups.forEach((group, lvl) => {
+            if (!group) return;
+            const startY = (canvas.height / 2) - ((group.length * spacingY) / 2) + (spacingY / 2);
+            group.forEach((node, idx) => {
+                node.x = startX + (lvl * spacingX);
+                node.y = startY + (idx * spacingY) - (GATE_HEIGHT / 2);
+            });
+        });
+
+        evaluate();
+    }
+
+    // --- I/O Operations ---
+
+    function exportCircuit() {
+        const exportData = nodes.map(n => ({
+            id: n.id,
+            type: n.type,
+            x: n.x,
+            y: n.y,
+            inputs: n.inputs
+        }));
+
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
+        const downloadAnchorElement = document.createElement('a');
+        downloadAnchorElement.setAttribute("href", dataStr);
+        downloadAnchorElement.setAttribute("download", "circuit.json");
+        document.body.appendChild(downloadAnchorElement); 
+        downloadAnchorElement.click();
+        downloadAnchorElement.remove();
+    }
+
+    function triggerImport() {
+        document.getElementById('import-file').click();
+    }
+
+    function handleImport(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const importedNodes = JSON.parse(e.target.result);
+                if (Array.isArray(importedNodes)) {
+                    nodes = importedNodes;
+                    selection = [];
+                    selectedWires = [];
+                    let maxId = 0;
+                    nodes.forEach(n => {
+                        n.value = false;
+                        n.visited = false;
+                        if (n.id > maxId) maxId = n.id;
+                    });
+                    nextId = maxId + 1;
+                    evaluate();
+                } else {
+                    alert("Invalid JSON format. Expected an array of nodes.");
+                }
+            } catch (err) {
+                alert("Error parsing JSON file.");
+            }
+        };
+        reader.readAsText(file);
+        event.target.value = "";
+    }
+
+    // --- DSL Parser & Execution ---
+
+    function runDSL() {
+        const code = document.getElementById('dsl-code').value;
+        nodes = [];
+        selection = [];
+        selectedWires = [];
+        nextId = 1;
+
+        const env = {
+            create: (type) => {
+                const id = nextId++;
+                nodes.push({ id, type: type.toUpperCase(), x: 0, y: 0, value: false, inputs: [] });
+                return id;
+            },
+            connect: (fromId, toId) => {
+                const target = nodes.find(n => n.id === toId);
+                if (target && !target.inputs.includes(fromId)) {
+                    if ((target.type === 'AND' || target.type === 'XOR') && target.inputs.length >= 2) return;
+                    if ((target.type === 'NOT' || target.type === 'OUTPUT') && target.inputs.length >= 1) return;
+                    target.inputs.push(fromId);
+                }
+            }
+        };
+
+        try {
+            const func = new Function(...Object.keys(env), code);
+            func(...Object.values(env));
+            normalizeCircuit(); 
+        } catch (e) {
+            alert("DSL Error: " + e.message);
+        }
+    }
+
+    runDSL();
+
+</script>
+</body>
+</html>
