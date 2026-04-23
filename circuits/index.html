@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!--- Coded by Gemini -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -76,15 +75,15 @@
 
         textarea {
             width: 100%;
-            flex-grow: 1; /* Automatically fills available vertical space */
-            min-height: 100px; /* Prevents it from crushing too small on tiny screens */
+            flex-grow: 1;
+            min-height: 100px;
             background-color: var(--bg-color);
             color: var(--text-color);
             border: 1px solid var(--gate-border);
             padding: 10px;
             font-family: monospace;
             font-size: 0.85rem;
-            resize: none; /* Disabled manual resize since it auto-fills */
+            resize: none;
             box-sizing: border-box;
             white-space: pre;
             overflow-wrap: normal;
@@ -149,46 +148,91 @@
             Available types: INPUT, OUTPUT, AND, XOR, NOT.
         </div>
         <textarea id="dsl-code">
-// Random Circuit Generator
-const numInputs = Math.floor(Math.random() * 4) + 2; 
-const numGates = Math.floor(Math.random() * 12) + 5; 
-const numOutputs = Math.floor(Math.random() * 3) + 1; 
-
+// 1. Setup exactly 5 inputs
 const inputs = [];
-for(let i=0; i<numInputs; i++) inputs.push(create('INPUT'));
+for(let i=0; i<5; i++) inputs.push(create('INPUT'));
 
-const types = ['AND', 'XOR', 'NOT'];
-const nodes = [...inputs];
+const inputUsage = new Array(5).fill(0);
+const gates = [];
+const hasDownstream = new Set();
 
-// Generate random gates and connect them
-for(let i=0; i<numGates; i++) {
-    const type = types[Math.floor(Math.random() * types.length)];
-    const gate = create(type);
+function link(from, to) {
+    connect(from, to);
+    hasDownstream.add(from);
+    let inIdx = inputs.indexOf(from);
+    if(inIdx !== -1) inputUsage[inIdx]++;
+}
+
+// 2. Add AND/XOR gates until every input is used at least twice
+const types = ['AND', 'XOR'];
+while(inputUsage.some(c => c < 2)) {
+    const gate = create(types[Math.floor(Math.random() * types.length)]);
+    gates.push(gate);
     
-    const connections = type === 'NOT' ? 1 : 2;
-    for(let c=0; c<connections; c++) {
-        const source = nodes[Math.floor(Math.random() * nodes.length)];
-        connect(source, gate);
-    }
-    nodes.push(gate);
+    let allNodes = [...inputs, ...gates.slice(0, -1)];
+    let needy = inputs.filter((_, i) => inputUsage[i] < 2);
+    
+    // Pick first source (prioritize needy inputs)
+    let src1 = needy.length > 0 
+        ? needy[Math.floor(Math.random() * needy.length)] 
+        : allNodes[Math.floor(Math.random() * allNodes.length)];
+    
+    // Pick second source
+    let remaining = allNodes.filter(id => id !== src1);
+    let src2 = remaining[Math.floor(Math.random() * remaining.length)];
+    
+    link(src1, gate);
+    link(src2, gate);
 }
 
-// Generate outputs and connect them
-for(let i=0; i<numOutputs; i++) {
-    const out = create('OUTPUT');
-    const sourcePool = nodes.length > inputs.length ? nodes.slice(inputs.length) : nodes;
-    const source = sourcePool[Math.floor(Math.random() * sourcePool.length)];
-    connect(source, out);
+// 3. Find gates that don't lead anywhere (dangling)
+let dangling = gates.filter(id => !hasDownstream.has(id));
+
+// Ensure we have at least 3 paths to feed the 3 outputs
+let allValidNodes = [...inputs, ...gates];
+while(dangling.length < 3) {
+    let randomNode = allValidNodes[Math.floor(Math.random() * allValidNodes.length)];
+    if (!dangling.includes(randomNode)) dangling.push(randomNode);
 }
+
+// 4. Merge dangling nodes into exactly 3 outputs using trees
+const outputs = [create('OUTPUT'), create('OUTPUT'), create('OUTPUT')];
+const buckets = [[], [], []];
+
+// Distribute dangling gates evenly into 3 buckets
+dangling.forEach((id, i) => buckets[i % 3].push(id));
+
+buckets.forEach((bucket, i) => {
+    let currentLayer = bucket;
+    
+    // Build binary reduction tree for this bucket
+    while(currentLayer.length > 1) {
+        let nextLayer = [];
+        for(let j=0; j<currentLayer.length; j+=2) {
+            if(j+1 < currentLayer.length) {
+                let mergeGate = create(Math.random() > 0.5 ? 'AND' : 'XOR');
+                gates.push(mergeGate);
+                link(currentLayer[j], mergeGate);
+                link(currentLayer[j+1], mergeGate);
+                nextLayer.push(mergeGate);
+            } else {
+                nextLayer.push(currentLayer[j]); // Carry over the odd node
+            }
+        }
+        currentLayer = nextLayer;
+    }
+    
+    // Connect the final reduced node to the output
+    connect(currentLayer[0], outputs[i]);
+});
         </textarea>
         <button onclick="runDSL()">Run Generator</button>
         
         <div class="info">
-            • Double-click INPUTs to toggle.<br>
+            • Dbl-click INPUTs to toggle.<br>
             • Drag from port circles to wire.<br>
-            • Click wires or gates to select.<br>
-            • Shift+Click for multi-select.<br>
-            • Selection shows influences (pink), dependencies (yellow), and both (orange).
+            • Box-select by dragging on empty space.<br>
+            • Ctrl+Z to undo, Del to delete.
         </div>
     </div>
 
@@ -238,6 +282,7 @@ for(let i=0; i<numOutputs; i++) {
     }
     window.addEventListener('resize', resize);
 
+    // Data Structures
     let nextId = 1;
     let nodes = []; 
     let selection = [];
@@ -247,10 +292,39 @@ for(let i=0; i<numOutputs; i++) {
     const GATE_HEIGHT = 40;
     const PORT_RADIUS = 5;
 
+    // Undo History State
+    let history = [];
+    const MAX_HISTORY = 50;
+
+    function saveState() {
+        const stateStr = JSON.stringify(nodes);
+        history.push({ nodes: stateStr, nextId: nextId });
+        if (history.length > MAX_HISTORY) history.shift();
+    }
+
+    function undo() {
+        if (history.length === 0) return;
+        const lastState = history.pop();
+        nodes = JSON.parse(lastState.nodes);
+        nextId = lastState.nextId;
+        selection = []; // Clear selection to prevent stale references
+        selectedWires = [];
+        evaluate();
+    }
+
+    // Interaction State
     let isDragging = false;
     let dragOffsetX = 0, dragOffsetY = 0;
+    let preDragState = null;
+    let dragHasMoved = false;
+
     let isWiring = false;
     let wireStartNode = null;
+    
+    let isBoxSelecting = false;
+    let boxStart = {x: 0, y: 0};
+    let boxEnd = {x: 0, y: 0};
+    
     let mouseX = 0, mouseY = 0;
 
     resize();
@@ -373,6 +447,24 @@ for(let i=0; i<numOutputs; i++) {
             ctx.stroke();
         }
 
+        // Draw Selection Box
+        if (isBoxSelecting) {
+            const bx = Math.min(boxStart.x, boxEnd.x);
+            const by = Math.min(boxStart.y, boxEnd.y);
+            const bw = Math.abs(boxEnd.x - boxStart.x);
+            const bh = Math.abs(boxEnd.y - boxStart.y);
+
+            const selColor = getComputedStyle(document.body).getPropertyValue('--selected').trim();
+            ctx.fillStyle = selColor + '33'; // 20% opacity hex
+            ctx.strokeStyle = selColor;
+            ctx.lineWidth = 1;
+            ctx.setLineDash([5, 5]);
+            
+            ctx.fillRect(bx, by, bw, bh);
+            ctx.strokeRect(bx, by, bw, bh);
+            ctx.setLineDash([]); // Reset
+        }
+
         // Draw Nodes
         nodes.forEach(node => {
             let isHighlighted = false;
@@ -469,6 +561,9 @@ for(let i=0; i<numOutputs; i++) {
                 }
                 
                 isDragging = true;
+                dragHasMoved = false;
+                preDragState = JSON.stringify(nodes); // Snapshot before drag
+
                 selection.forEach(selNode => {
                     nodes.push(nodes.splice(nodes.indexOf(selNode), 1)[0]);
                 });
@@ -511,6 +606,10 @@ for(let i=0; i<numOutputs; i++) {
                     selectedWires = [clickedWire];
                 }
             } else {
+                // Start Box Selection
+                isBoxSelecting = true;
+                boxStart = {x: mouseX, y: mouseY};
+                boxEnd = {x: mouseX, y: mouseY};
                 if (!e.shiftKey) {
                     selection = [];
                     selectedWires = [];
@@ -527,6 +626,7 @@ for(let i=0; i<numOutputs; i++) {
         mouseY = e.clientY - rect.top;
 
         if (isDragging && selection.length > 0) {
+            dragHasMoved = true;
             const primaryNode = selection[selection.length - 1];
             const dx = mouseX - dragOffsetX - primaryNode.x;
             const dy = mouseY - dragOffsetY - primaryNode.y;
@@ -538,29 +638,79 @@ for(let i=0; i<numOutputs; i++) {
             draw();
         } else if (isWiring) {
             draw();
+        } else if (isBoxSelecting) {
+            boxEnd = {x: mouseX, y: mouseY};
+            draw();
         }
     });
 
     canvas.addEventListener('mouseup', (e) => {
-        if (isWiring) {
+        if (isBoxSelecting) {
+            isBoxSelecting = false;
+            const bx = Math.min(boxStart.x, boxEnd.x);
+            const by = Math.min(boxStart.y, boxEnd.y);
+            const bw = Math.abs(boxEnd.x - boxStart.x);
+            const bh = Math.abs(boxEnd.y - boxStart.y);
+
+            // Only apply selection if box actually has a width/height (ignores accidental micro-drags)
+            if (bw > 5 || bh > 5) {
+                nodes.forEach(n => {
+                    // Check if node box intersects selection box
+                    if (n.x < bx + bw && n.x + GATE_WIDTH > bx &&
+                        n.y < by + bh && n.y + GATE_HEIGHT > by) {
+                        if (!selection.includes(n)) selection.push(n);
+                    }
+                });
+
+                // Automatically select wires if BOTH connected nodes are in the new selection
+                nodes.forEach(target => {
+                    target.inputs.forEach(sourceId => {
+                        const source = nodes.find(n => n.id === sourceId);
+                        if (source && selection.includes(source) && selection.includes(target)) {
+                            if (!selectedWires.some(w => w.sourceId === source.id && w.targetId === target.id)) {
+                                selectedWires.push({sourceId: source.id, targetId: target.id});
+                            }
+                        }
+                    });
+                });
+            }
+        } else if (isWiring) {
             const target = getNodeAt(mouseX, mouseY);
             if (target && target.node !== wireStartNode && target.node.type !== 'INPUT') {
                 const infs = getInfluences(target.node.id);
                 if (!infs.has(wireStartNode.id)) {
+                    let validConnection = false;
                     if (target.node.type === 'NOT' || target.node.type === 'OUTPUT') {
-                        target.node.inputs = [wireStartNode.id];
-                    } else if (target.node.type === 'AND' || target.node.type === 'XOR') {
-                        if (target.node.inputs.length < 2 && !target.node.inputs.includes(wireStartNode.id)) {
-                            target.node.inputs.push(wireStartNode.id);
+                        if (target.node.inputs.length < 1 && !target.node.inputs.includes(wireStartNode.id)) validConnection = true;
+                        else if (target.node.inputs.length === 1 && target.node.inputs[0] !== wireStartNode.id) {
+                            // Replace existing connection for 1-input gates
+                            target.node.inputs = [];
+                            validConnection = true;
                         }
+                    } else if (target.node.type === 'AND' || target.node.type === 'XOR') {
+                        if (target.node.inputs.length < 2 && !target.node.inputs.includes(wireStartNode.id)) validConnection = true;
                     }
-                    evaluate();
+
+                    if (validConnection) {
+                        saveState();
+                        target.node.inputs.push(wireStartNode.id);
+                        evaluate();
+                    }
                 }
             }
+        } else if (isDragging) {
+            if (dragHasMoved && preDragState) {
+                history.push({ nodes: preDragState, nextId: nextId });
+                if (history.length > MAX_HISTORY) history.shift();
+            }
         }
+        
         isDragging = false;
+        dragHasMoved = false;
         isWiring = false;
+        isBoxSelecting = false;
         wireStartNode = null;
+        preDragState = null;
         draw();
     });
 
@@ -574,16 +724,22 @@ for(let i=0; i<numOutputs; i++) {
     });
 
     window.addEventListener('keydown', (e) => {
-        if (e.key === 'Delete' || e.key === 'Backspace') {
-            if (document.activeElement.tagName !== 'TEXTAREA') {
-                deleteSelected();
-            }
+        // Prevent interfering with typing inside the text area
+        if (document.activeElement.tagName === 'TEXTAREA') return;
+
+        if (e.ctrlKey && (e.key === 'z' || e.key === 'Z')) {
+            undo();
+            e.preventDefault();
+        } else if (e.key === 'Delete' || e.key === 'Backspace') {
+            deleteSelected();
+            e.preventDefault();
         }
     });
 
     // --- Actions ---
 
     function addGate(type) {
+        saveState();
         nodes.push({
             id: nextId++,
             type: type,
@@ -596,6 +752,9 @@ for(let i=0; i<numOutputs; i++) {
     }
 
     function deleteSelected() {
+        if (selection.length === 0 && selectedWires.length === 0) return;
+        saveState();
+
         selectedWires.forEach(wire => {
             const targetNode = nodes.find(n => n.id === wire.targetId);
             if (targetNode) {
@@ -615,6 +774,7 @@ for(let i=0; i<numOutputs; i++) {
     }
 
     function pruneCircuit() {
+        saveState();
         let changed = true;
         while (changed) {
             changed = false;
@@ -688,6 +848,7 @@ for(let i=0; i<numOutputs; i++) {
     }
 
     function normalizeCircuit() {
+        saveState();
         let removedIds = new Set();
         nodes.filter(n => n.type === 'NOT').forEach(n1 => {
             if (removedIds.has(n1.id)) return;
@@ -710,6 +871,7 @@ for(let i=0; i<numOutputs; i++) {
         selectedWires = []; 
         selection = [];
 
+        // Strict Topological Leveling (Longest path from inputs)
         let levels = new Map();
         
         function getLevel(node) {
@@ -743,14 +905,49 @@ for(let i=0; i<numOutputs; i++) {
         const spacingY = 80;
         const startX = 50;
 
-        levelGroups.forEach((group, lvl) => {
-            if (!group) return;
+        // Coordinate Assignment with Barycenter Heuristic to minimize wire crossings
+        // 1. Assign Y coordinates to Level 0
+        if (levelGroups[0]) {
+            const startY = (canvas.height / 2) - ((levelGroups[0].length * spacingY) / 2) + (spacingY / 2);
+            levelGroups[0].forEach((node, idx) => {
+                node.x = startX;
+                node.y = startY + (idx * spacingY) - (GATE_HEIGHT / 2);
+            });
+        }
+
+        // 2. Assign Y coordinates to subsequent levels based on average input Y
+        for (let lvl = 1; lvl < levelGroups.length; lvl++) {
+            let group = levelGroups[lvl];
+            if (!group) continue;
+
+            // Calculate barycenter (average Y position of incoming connections)
+            group.forEach(node => {
+                if (node.inputs.length === 0) {
+                    node.avgInputY = canvas.height / 2; 
+                } else {
+                    let sumY = 0;
+                    let count = 0;
+                    node.inputs.forEach(inId => {
+                        const inNode = nodes.find(n => n.id === inId);
+                        if (inNode && inNode.y !== undefined) {
+                            sumY += inNode.y + (GATE_HEIGHT / 2); 
+                            count++;
+                        }
+                    });
+                    node.avgInputY = count > 0 ? sumY / count : canvas.height / 2;
+                }
+            });
+
+            // Sort nodes within this level based on their input averages
+            group.sort((a, b) => a.avgInputY - b.avgInputY);
+
+            // Assign final coordinates for this level
             const startY = (canvas.height / 2) - ((group.length * spacingY) / 2) + (spacingY / 2);
             group.forEach((node, idx) => {
                 node.x = startX + (lvl * spacingX);
                 node.y = startY + (idx * spacingY) - (GATE_HEIGHT / 2);
             });
-        });
+        }
 
         evaluate();
     }
@@ -788,6 +985,7 @@ for(let i=0; i<numOutputs; i++) {
             try {
                 const importedNodes = JSON.parse(e.target.result);
                 if (Array.isArray(importedNodes)) {
+                    saveState();
                     nodes = importedNodes;
                     selection = [];
                     selectedWires = [];
@@ -814,6 +1012,8 @@ for(let i=0; i<numOutputs; i++) {
 
     function runDSL() {
         const code = document.getElementById('dsl-code').value;
+        saveState();
+        
         nodes = [];
         selection = [];
         selectedWires = [];
@@ -841,6 +1041,7 @@ for(let i=0; i<numOutputs; i++) {
             normalizeCircuit(); 
         } catch (e) {
             alert("DSL Error: " + e.message);
+            undo(); // Revert if script crashes midway
         }
     }
 
