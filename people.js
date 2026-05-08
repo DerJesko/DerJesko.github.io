@@ -1,5 +1,9 @@
 var people =
 {
+    "abhishek": {
+        "name": "Abhishek Jain",
+        "website": "https://www.cs.jhu.edu/~abhishek/"
+    },
     "angelos": {
         "name": "Angelos Pelecanos",
         "website": "https://apelecan.github.io/"
@@ -75,6 +79,14 @@ var people =
     "wei": {
         "name": "Wei Qi",
         "website": "https://qixiaoweiwei.github.io/"
+    },
+    "willy": {
+        "name": "Willy Quach",
+        "website": "https://wquach.github.io/"
+    },
+    "yaoching": {
+        "name": "Yao-Ching Hsieh",
+        "website": "https://sites.google.com/view/ychsieh"
     },
     "yuval": {
         "name": "Yuval Ishai",
