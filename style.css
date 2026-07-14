@@ -1,23 +1,276 @@
-div.content {
-    padding: max(10px, 2%);
+:root {
+    --bg: #f7f8fa;
+    --surface: #ffffff;
+    --text: #1d2433;
+    --muted: #5b6474;
+    --accent: #1d4ed8;
+    --accent-soft: #e4eafc;
+    --border: #e4e7ec;
 }
 
-@media (min-width: 1000px) {
-    div.content {
-        padding: 20px 15%;
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: #10151f;
+        --surface: #1a2130;
+        --text: #e6e9ef;
+        --muted: #9aa4b5;
+        --accent: #8ab0ff;
+        --accent-soft: #24304a;
+        --border: #2a3345;
     }
 }
 
-body {
-    background: linear-gradient(120deg, #ccddf0, #eeeeee);
-    font-family: Arial, Helvetica, sans-serif;
+* {
+    box-sizing: border-box;
 }
 
-div.content>div {
-    margin-bottom: 30px;
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.65;
+}
+
+.content {
+    max-width: 48rem;
+    margin: 0 auto;
+    padding: 1rem 1.25rem 4rem;
+}
+
+h1 {
+    font-size: 2.3rem;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    margin: 0 0 0.25rem;
+}
+
+h2 {
+    font-size: 1.35rem;
+    margin: 2.8rem 0 1rem;
+    padding-bottom: 0.35rem;
+    border-bottom: 2px solid var(--border);
+}
+
+a {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
 }
 
 a.people {
-    color: #000;
+    color: inherit;
+}
+
+code {
+    background: var(--accent-soft);
+    padding: 0.1rem 0.4rem;
+    border-radius: 5px;
+    font-size: 0.9em;
+}
+
+#navv {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    margin: 0 -1.25rem 1.5rem;
+    background: var(--bg);
+}
+
+#navv a {
+    padding: 0.25rem 0.85rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text);
+}
+
+#navv a:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    text-decoration: none;
+}
+
+#about {
+    display: grid;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+@media (min-width: 720px) {
+    #about {
+        grid-template-columns: 1fr 240px;
+    }
+}
+
+#headshot {
+    width: 100%;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+}
+
+.tagline {
+    color: var(--muted);
+    margin: 0;
+}
+
+.self {
+    font-weight: 600;
+}
+
+.muted {
+    color: var(--muted);
+    font-size: 0.92rem;
+}
+
+section > p:first-of-type {
+    margin-top: 0;
+}
+
+/* Publications: one card per paper */
+ul.cards {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+ul.cards > li {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.8rem 1rem;
+    margin-bottom: 0.65rem;
+}
+
+.title {
+    font-weight: 600;
+}
+
+.venue {
+    display: inline-block;
+    margin-top: 0.35rem;
+    padding: 0.05rem 0.6rem;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+/* Talks: timeline */
+ul.timeline {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 0 1.4rem;
+    border-left: 2px solid var(--border);
+}
+
+ul.timeline > li {
+    position: relative;
+    padding: 0.45rem 0;
+}
+
+ul.timeline > li::before {
+    content: "";
+    position: absolute;
+    left: calc(-1.4rem - 7.5px);
+    top: 1rem;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 2px solid var(--accent);
+}
+
+ul.timeline a.title::after {
+    content: "▶";
+    margin-left: 0.45rem;
+    font-size: 0.7em;
+}
+
+/* Teaching: grid of small cards */
+ul.grid-cards {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr));
+    gap: 0.65rem;
+}
+
+ul.grid-cards > li {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.7rem 0.9rem;
+}
+
+/* Community service, people: pill chips */
+ul.chips {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+ul.chips > li {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.2rem 0.85rem;
+    font-size: 0.9rem;
+}
+
+ul.chips > li:hover {
+    border-color: var(--accent);
+}
+
+ul.chips.accent > li {
+    background: var(--accent-soft);
+    border-color: transparent;
+    color: var(--accent);
+    font-weight: 600;
+}
+
+/* People: flowing names with a soft highlight */
+ul.people-flow {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    font-size: 1.05rem;
+    line-height: 2.3;
+}
+
+ul.people-flow > li {
+    display: inline-block;
+}
+
+ul.people-flow > li:not(:last-child)::after {
+    content: "·";
+    color: var(--muted);
+    margin: 0 0.65rem;
+}
+
+ul.people-flow a {
+    color: var(--text);
+    font-weight: 500;
+    white-space: nowrap;
+    box-shadow: inset 0 -0.4em 0 var(--accent-soft);
+    transition: box-shadow 0.15s ease;
+}
+
+ul.people-flow a:hover {
+    box-shadow: inset 0 -1.4em 0 var(--accent-soft);
     text-decoration: none;
 }
