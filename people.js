@@ -4,6 +4,10 @@ var people =
         "name": "Abhishek Jain",
         "website": "https://www.cs.jhu.edu/~abhishek/"
     },
+    "alexporemba": {
+        "name": "Alexander Poremba",
+        "website": "https://scc1.bu.edu/poremba/"
+    },
     "angelos": {
         "name": "Angelos Pelecanos",
         "website": "https://apelecan.github.io/"
@@ -43,6 +47,10 @@ var people =
     "haji": {
         "name": "Mohammad Hajiabadi",
         "website": "https://sites.google.com/view/mdhajiabadi/home"
+    },
+    "jonas": {
+        "name": "Jonas Haferkamp",
+        "website": "https://sites.google.com/view/jonas-haferkamp/home"
     },
     "julian": {
         "name": "Julian Loss",
