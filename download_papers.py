@@ -2,14 +2,14 @@
 """Download the IACR ePrint papers listed on this website.
 
 The script first tries an ordinary HTTP download. If IACR responds with its
-Cloudflare browser challenge, it opens Chrome through Selenium. Complete any
-challenge in that window and the script will continue automatically. The
-revision advertised by each ePrint record is stored next to the PDFs in
-``.eprint-revisions.json``; when that value changes, the existing PDF is
-replaced with the new revision.
+Cloudflare browser challenge, it opens the PDFs in a regular Chromium window
+(with a dedicated profile, not remote-controlled, so Cloudflare accepts it).
+Complete any challenge in that window and the script will continue
+automatically. The revision advertised by each ePrint record is stored next to
+the PDFs in ``.eprint-revisions.json``; when that value changes, the existing
+PDF is replaced with the new revision.
 
 Usage:
-    python3 -m pip install -r requirements-download-papers.txt
     python3 download_papers.py
 
 Run ``python3 download_papers.py --help`` for all options.
@@ -52,6 +52,19 @@ USER_AGENT = (
 )
 REVISION_REQUEST_DELAY = 1.0
 REVISION_REQUEST_ATTEMPTS = 3
+BROWSER_CANDIDATES = (
+    "chromium",
+    "chromium-browser",
+    "google-chrome-stable",
+    "google-chrome",
+    "brave-browser",
+    "brave",
+)
+# Kept between runs so the Cloudflare clearance cookie is reused.
+BROWSER_PROFILE_DIR = (
+    Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache")
+    / "download-papers-browser"
+)
 
 
 @dataclass(frozen=True, order=True)
@@ -281,126 +294,123 @@ def completed_downloads(directory: Path) -> set[Path]:
 
 
 def wait_for_browser_download(
-    driver: object,
     directory: Path,
     files_before: set[Path],
     timeout: int,
-    headless: bool,
 ) -> Path:
     deadline = time.monotonic() + timeout
-    challenge_announced = False
-
     while time.monotonic() < deadline:
-        new_files = completed_downloads(directory) - files_before
-        for path in new_files:
+        for path in completed_downloads(directory) - files_before:
             if is_valid_pdf(path):
                 return path
-
-        try:
-            title = str(getattr(driver, "title", ""))
-        except Exception:
-            # Chrome may briefly detach the page while handing a PDF to its
-            # download manager. The file watcher remains authoritative.
-            title = ""
-        if "just a moment" in title.lower() and not challenge_announced:
-            if headless:
-                print("    Cloudflare challenge detected (headless mode cannot solve it).")
-            else:
-                print("    Complete the Cloudflare check in the Chrome window; waiting …")
-            challenge_announced = True
         time.sleep(0.5)
 
     raise DownloadError(f"browser download timed out after {timeout} seconds")
 
 
-def download_with_selenium(
+def find_browser(requested: str | None) -> str:
+    for candidate in (requested,) if requested else BROWSER_CANDIDATES:
+        executable = shutil.which(candidate)
+        if executable:
+            return executable
+    if requested:
+        raise DownloadError(f"Browser not found: {requested}")
+    raise DownloadError(
+        "No Chromium-based browser found; pass --browser /path/to/chrome"
+    )
+
+
+def prepare_browser_profile(profile_dir: Path, download_dir: Path) -> None:
+    """Make the profile save PDFs to ``download_dir`` instead of showing them."""
+    preferences_path = profile_dir / "Default" / "Preferences"
+    preferences_path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        preferences = json.loads(preferences_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        preferences = {}
+    if not isinstance(preferences, dict):
+        preferences = {}
+
+    def section(name: str) -> dict[str, object]:
+        if not isinstance(preferences.get(name), dict):
+            preferences[name] = {}
+        return preferences[name]
+
+    section("download").update(
+        {
+            "default_directory": str(download_dir),
+            "directory_upgrade": True,
+            "prompt_for_download": False,
+        }
+    )
+    section("plugins")["always_open_pdf_externally"] = True
+    # The script closes the browser itself; avoid a "Restore pages?" prompt.
+    section("profile").update({"exit_type": "Normal", "exited_cleanly": True})
+
+    try:
+        preferences_path.write_text(json.dumps(preferences), encoding="utf-8")
+    except OSError as exc:
+        raise DownloadError(f"Cannot write {preferences_path}: {exc}") from exc
+
+
+def download_with_browser(
     papers: list[Paper],
     output_dir: Path,
     timeout: int,
-    headless: bool,
+    browser: str | None,
     no_sandbox: bool,
 ) -> tuple[list[Paper], list[tuple[Paper, str]]]:
-    try:
-        from selenium import webdriver
-        from selenium.common.exceptions import TimeoutException, WebDriverException
-        from selenium.webdriver.chrome.options import Options
-    except ImportError as exc:
-        raise DownloadError(
-            "Selenium is not installed. Run: "
-            "python3 -m pip install -r requirements-download-papers.txt"
-        ) from exc
+    # The browser is started as an ordinary process rather than through
+    # WebDriver: Cloudflare detects automated browsers and never lets them
+    # pass its challenge.
+    executable = find_browser(browser)
+    download_dir = BROWSER_PROFILE_DIR / "downloads"
+    download_dir.mkdir(parents=True, exist_ok=True)
+    prepare_browser_profile(BROWSER_PROFILE_DIR, download_dir)
 
+    command = [
+        executable,
+        f"--user-data-dir={BROWSER_PROFILE_DIR}",
+        "--no-first-run",
+        "--no-default-browser-check",
+    ]
+    if no_sandbox:
+        command.append("--no-sandbox")
+
+    print("  Complete any Cloudflare check in the browser window; waiting …")
     downloaded: list[Paper] = []
     failed: list[tuple[Paper, str]] = []
-
-    with tempfile.TemporaryDirectory(prefix="paper-download-") as temporary_dir:
-        browser_download_dir = Path(temporary_dir).resolve()
-        options = Options()
-        if headless:
-            options.add_argument("--headless=new")
-        if no_sandbox:
-            options.add_argument("--no-sandbox")
-        options.add_argument("--disable-dev-shm-usage")
-        options.add_experimental_option(
-            "prefs",
-            {
-                "download.default_directory": str(browser_download_dir),
-                "download.directory_upgrade": True,
-                "download.prompt_for_download": False,
-                "plugins.always_open_pdf_externally": True,
-                "safebrowsing.enabled": True,
-            },
-        )
-
-        try:
-            driver = webdriver.Chrome(options=options)
-        except WebDriverException as exc:
-            raise DownloadError(f"Could not start Chrome through Selenium: {exc}") from exc
-
-        try:
-            driver.set_page_load_timeout(timeout)
-            try:
-                driver.execute_cdp_cmd(
-                    "Browser.setDownloadBehavior",
-                    {
-                        "behavior": "allow",
-                        "downloadPath": str(browser_download_dir),
-                    },
+    processes: list[subprocess.Popen[bytes]] = []
+    try:
+        for paper in papers:
+            print(f"  Browser: {paper.paper_id}")
+            files_before = completed_downloads(download_dir)
+            # The first call starts the browser; later calls hand the URL to
+            # the running instance (in a new tab) and exit immediately.
+            processes.append(
+                subprocess.Popen(
+                    [*command, paper.pdf_url],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
                 )
-            except WebDriverException:
-                # Chrome preferences above are sufficient on versions without this CDP method.
-                pass
-
-            for paper in papers:
-                print(f"  Browser: {paper.paper_id}")
-                files_before = completed_downloads(browser_download_dir)
-                navigation_error = ""
-                try:
-                    driver.get(paper.landing_url)
-                    driver.get(paper.pdf_url)
-                except TimeoutException:
-                    # A download can abort or outlive navigation while still succeeding.
-                    pass
-                except WebDriverException as exc:
-                    # Chrome commonly reports ERR_ABORTED when navigation turns
-                    # into a download, so check the download directory first.
-                    navigation_error = str(exc)
-
-                try:
-                    downloaded_file = wait_for_browser_download(
-                        driver,
-                        browser_download_dir,
-                        files_before,
-                        timeout,
-                        headless,
-                    )
-                    target = output_dir / paper.filename
-                    os.replace(downloaded_file, target)
-                    downloaded.append(paper)
-                except DownloadError as exc:
-                    failed.append((paper, navigation_error or str(exc)))
-        finally:
-            driver.quit()
+            )
+            try:
+                downloaded_file = wait_for_browser_download(
+                    download_dir, files_before, timeout
+                )
+                shutil.move(downloaded_file, output_dir / paper.filename)
+                downloaded.append(paper)
+            except (DownloadError, OSError) as exc:
+                failed.append((paper, str(exc)))
+    finally:
+        for process in processes:
+            if process.poll() is None:
+                process.terminate()
+        for process in processes:
+            try:
+                process.wait(timeout=10)
+            except subprocess.TimeoutExpired:
+                process.kill()
 
     return downloaded, failed
 
@@ -426,17 +436,18 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--direct-only",
         action="store_true",
-        help="do not open Selenium when direct downloads fail",
+        help="do not open a browser when direct downloads fail",
     )
     parser.add_argument(
-        "--headless",
-        action="store_true",
-        help="run Chrome without a window (cannot complete interactive challenges)",
+        "--browser",
+        help="Chromium-based browser executable (default: first one found of "
+        + ", ".join(BROWSER_CANDIDATES)
+        + ")",
     )
     parser.add_argument(
         "--no-sandbox",
         action="store_true",
-        help="pass --no-sandbox to Chrome (occasionally needed in containers)",
+        help="pass --no-sandbox to the browser (occasionally needed in containers)",
     )
     parser.add_argument(
         "--timeout",
@@ -541,13 +552,13 @@ def main() -> int:
 
     failures: list[tuple[Paper, str]] = []
     if browser_pending and not arguments.direct_only:
-        print(f"Trying {len(browser_pending)} paper(s) in Chrome via Selenium …")
+        print(f"Trying {len(browser_pending)} paper(s) in the browser …")
         try:
-            browser_downloaded, failures = download_with_selenium(
+            browser_downloaded, failures = download_with_browser(
                 browser_pending,
                 output_dir,
                 arguments.timeout,
-                arguments.headless,
+                arguments.browser,
                 arguments.no_sandbox,
             )
             downloaded.extend(browser_downloaded)
