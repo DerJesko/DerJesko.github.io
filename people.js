@@ -40,6 +40,10 @@ var people =
         "name": "Gal Arnon",
         "website": "https://galarnon42.github.io/"
     },
+    "george": {
+        "name": "George Lu",
+        "website": "https://sites.google.com/view/george-lu"
+    },
     "giulio": {
         "name": "Giulio Malavolta",
         "website": "https://sites.google.com/view/giuliomalavolta/"
@@ -47,6 +51,10 @@ var people =
     "haji": {
         "name": "Mohammad Hajiabadi",
         "website": "https://sites.google.com/view/mdhajiabadi/home"
+    },
+    "jad": {
+        "name": "Jad Silbak",
+        "website": "https://sites.google.com/view/jadsilbak/home"
     },
     "jonas": {
         "name": "Jonas Haferkamp",
@@ -99,5 +107,9 @@ var people =
     "yuval": {
         "name": "Yuval Ishai",
         "website": "https://yuvali.cswp.cs.technion.ac.il/"
+    },
+    "zhengnan": {
+        "name": "Zhengnan Lai",
+        "website": "https://dblp.org/search?q=Zhengnan+Lai"
     },
 };
